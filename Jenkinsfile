@@ -15,18 +15,20 @@ pipeline {
         }
 
         stage('Terraform Init & Apply') {
-            environment {
-                EC2_PRIVATE_KEY = credentials('ec2-private-key')  // Stored in Jenkins Credentials
-            }
-            steps {
-                writeFile file: 'ec2_key.pem', text: "${env.EC2_PRIVATE_KEY}"
-                sh 'chmod 400 ec2_key.pem'
-                dir('./terraform') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve -var="private_key_path=../ec2_key.pem"'
-                }
-            }
+    environment {
+        EC2_PRIVATE_KEY = credentials('ec2-private-key') // Add key as secret text in Jenkins Credentials
+    }
+    steps {
+        sh 'mkdir -p /tmp/jenkins_keys'
+        writeFile file: '/tmp/jenkins_keys/ec2_key.pem', text: "${env.EC2_PRIVATE_KEY}"
+        sh 'chmod 400 /tmp/jenkins_keys/ec2_key.pem'
+
+        dir('./terraform') {
+            sh 'terraform init'
+            sh 'terraform apply -auto-approve -var="private_key_path=/tmp/jenkins_keys/ec2_key.pem"'
         }
+    }
+}
 
         stage('Checkout Backend') {
             steps {
