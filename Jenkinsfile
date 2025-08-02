@@ -15,13 +15,15 @@ pipeline {
         }
 
         stage('Terraform Init & Apply') {
-            steps {
-                dir('.') {
+        steps {
+            withAWS(credentials: 'aws-cli-creds', region: 'ap-south-1') {
+                dir('./terraform') {
                     sh 'terraform init'
                     sh 'terraform apply -auto-approve'
                 }
             }
         }
+    }
 
         stage('Checkout Backend') {
             steps {
