@@ -15,15 +15,18 @@ pipeline {
         }
 
         stage('Terraform Init & Apply') {
-        steps {
-            withAWS(credentials: 'aws-cli-creds', region: 'ap-south-1') {
+            environment {
+                EC2_PRIVATE_KEY = credentials('ec2-private-key')  // Stored in Jenkins Credentials
+            }
+            steps {
+                writeFile file: 'ec2_key.pem', text: "${env.EC2_PRIVATE_KEY}"
+                sh 'chmod 400 ec2_key.pem'
                 dir('./terraform') {
                     sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                    sh 'terraform apply -auto-approve -var="private_key_path=../ec2_key.pem"'
                 }
             }
         }
-    }
 
         stage('Checkout Backend') {
             steps {
@@ -47,9 +50,9 @@ pipeline {
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-                    scp -o StrictHostKeyChecking=no target/*.jar ec2-user@<ec2-ip>:/home/ec2-user/app.jar
-                    ssh -o StrictHostKeyChecking=no ec2-user@<ec2-ip> "pkill -f 'java' || true"
-                    ssh -o StrictHostKeyChecking=no ec2-user@<ec2-ip> "nohup java -jar app.jar > app.log 2>&1 &"
+                        scp -o StrictHostKeyChecking=no target/*.jar ec2-user@<ec2-ip>:/home/ec2-user/app.jar
+                        ssh -o StrictHostKeyChecking=no ec2-user@<ec2-ip> "pkill -f 'java' || true"
+                        ssh -o StrictHostKeyChecking=no ec2-user@<ec2-ip> "nohup java -jar app.jar > app.log 2>&1 &"
                     '''
                 }
             }
@@ -64,8 +67,8 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 sh '''
-                npm install
-                npm run build
+                    npm install
+                    npm run build
                 '''
             }
         }
@@ -73,9 +76,7 @@ pipeline {
         stage('Upload to S3') {
             steps {
                 withAWS(credentials: 'aws-cli-creds') {
-                    sh '''
-                    aws s3 sync dist/ s3://akki-react-frontend-2025/ --delete
-                    '''
+                    sh 'aws s3 sync dist/ s3://akki-react-frontend-2025/ --delete'
                 }
             }
         }
