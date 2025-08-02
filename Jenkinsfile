@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Infra') {
             steps {
-                git url: 'https://github.com/nawin34/fullstack-aws.git'
+                git url: 'https://github.com/nawin34/fullstack-aws.git', branch: 'main'
             }
         }
 
@@ -25,7 +25,7 @@ pipeline {
 
         stage('Checkout Backend') {
             steps {
-                git url: 'https://github.com/nawin34/fullstack-springboot.git'
+                git url: 'https://github.com/nawin34/fullstack-springboot.git', branch: 'main'
             }
         }
 
@@ -55,7 +55,7 @@ pipeline {
 
         stage('Checkout Frontend') {
             steps {
-                git url: 'https://github.com/nawin34/fullstack-react.git'
+                git url: 'https://github.com/nawin34/fullstack-react.git', branch: 'main'
             }
         }
 
