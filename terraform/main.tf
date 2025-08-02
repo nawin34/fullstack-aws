@@ -9,7 +9,7 @@ variable "react_bucket_name" {
 
 variable "ec2_key_pair" {
   type    = string
-  default = "akki-ec2-key"
+  default = "../ec2_key.pem"
 }
 
 variable "private_key_path" {
